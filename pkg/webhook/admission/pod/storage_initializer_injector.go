@@ -19,6 +19,8 @@ package pod
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -27,6 +29,8 @@ import (
 	"github.com/kserve/kserve/pkg/credentials"
 
 	v1 "k8s.io/api/core/v1"
+
+	"knative.dev/pkg/ptr"
 )
 
 const (
@@ -249,6 +253,11 @@ func (mi *StorageInitializerInjector) InjectStorageInitializer(pod *v1.Pod) erro
 		}
 	}
 
+	if v := os.Getenv("ISTIO_WITH_CNI_AND_DNS_PROXY"); v != "" {
+		if b, _ := strconv.ParseBool(v); b {
+			initContainer.SecurityContext.RunAsUser = ptr.Int64(1337)
+		}
+	}
 	// Add init container to the spec
 	pod.Spec.InitContainers = append(pod.Spec.InitContainers, *initContainer)
 
